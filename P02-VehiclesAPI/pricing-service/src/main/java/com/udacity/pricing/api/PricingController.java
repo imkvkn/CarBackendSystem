@@ -20,6 +20,7 @@ public class PricingController {
     public PricingService pricingService;
 
     PricingController(PricingService pricingService){
+
         this.pricingService=pricingService;
     }
     /**
@@ -41,7 +42,7 @@ public class PricingController {
     ResponseEntity<?> delete(@PathVariable Long id) throws PriceException {
         try {
             pricingService.deleteById(id);
-            return new ResponseEntity<>("id deleted re",HttpStatus.OK);
+            return new ResponseEntity<>("price deleted",HttpStatus.OK);
         }catch(PriceException ex) {
         throw new ResponseStatusException(
                 HttpStatus.NOT_FOUND, "Price Not Found", ex);

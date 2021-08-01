@@ -18,7 +18,7 @@ public class MapsController {
     @GetMapping
     public ResponseEntity<Address> get(@RequestParam(required = false) Double lat, @RequestParam(required = false) Double lon) {
         if(lat==null||lon==null){
-            Address address=new Address("NOT_FOUND","NOT_FOUND","NOT_FOUND","NOT_FOUND");
+            Address address=new Address("NOT VALID LAT/LON","NOT VALID LAT/LON","NOT VALID LAT/LON","NOT VALID LAT/LON");
             return new ResponseEntity<Address>(address,HttpStatus.NOT_FOUND);
         }
         Address address=MockAddressRepository.getRandom();

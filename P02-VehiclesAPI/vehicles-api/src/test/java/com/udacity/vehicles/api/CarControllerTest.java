@@ -5,8 +5,10 @@ import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -22,8 +24,10 @@ import com.udacity.vehicles.service.CarService;
 import java.net.URI;
 import java.util.Collections;
 import org.junit.Before;
+import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.junit.runners.MethodSorters;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.json.AutoConfigureJsonTesters;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -33,6 +37,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultMatcher;
 
 /**
  * Implements testing of the CarController class.
@@ -41,6 +46,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @SpringBootTest
 @AutoConfigureMockMvc
 @AutoConfigureJsonTesters
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class CarControllerTest {
 
     @Autowired
@@ -75,14 +81,16 @@ public class CarControllerTest {
      * @throws Exception when car creation fails in the system
      */
     @Test
-    public void createCar() throws Exception {
+    public void test_1_createCar() throws Exception {
         Car car = getCar();
         mvc.perform(
                 post(new URI("/cars"))
                         .content(json.write(car).getJson())
                         .contentType(MediaType.APPLICATION_JSON_UTF8)
                         .accept(MediaType.APPLICATION_JSON_UTF8))
-                .andExpect(status().isCreated());
+                .andExpect(status().isCreated())
+                .andDo(print());
+
     }
 
     /**
@@ -90,12 +98,15 @@ public class CarControllerTest {
      * @throws Exception if the read operation of the vehicle list fails
      */
     @Test
-    public void listCars() throws Exception {
-        /**
-         * TODO: Add a test to check that the `get` method works by calling
-         *   the whole list of vehicles. This should utilize the car from `getCar()`
-         *   below (the vehicle will be the first in the list).
-         */
+    public void test_listCars() throws Exception {
+
+        mvc.perform(get(new URI("/cars"))
+                .accept(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$._embedded").exists())
+                .andExpect(jsonPath("$._embedded.carList", hasSize(1)))
+                .andExpect(jsonPath("$._embedded.carList[0].id", is(1)))
+                .andExpect(jsonPath("$._embedded.carList[0].condition", is(Condition.USED.name())));
 
     }
 
@@ -104,24 +115,41 @@ public class CarControllerTest {
      * @throws Exception if the read operation for a single car fails
      */
     @Test
-    public void findCar() throws Exception {
-        /**
-         * TODO: Add a test to check that the `get` method works by calling
-         *   a vehicle by ID. This should utilize the car from `getCar()` below.
-         */
+    public void test_3_findCar() throws Exception {
+
+        mvc.perform(get(new URI("/cars/1"))
+                .accept(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id", is(1)))
+                .andExpect(jsonPath("$.condition", is(Condition.USED.name())))
+                .andExpect(jsonPath("$.details.body", is("sedan")))
+                .andExpect(jsonPath("$.location.lat", is(40.73061)))
+                .andDo(print());
     }
+
+    @Test
+    public void test_4_updateCar() throws Exception{
+        Car car = getUpdatedCar();
+        mvc.perform(put(new URI("/cars/1"))
+                .content(json.write(car).getJson())
+                .contentType(MediaType.APPLICATION_JSON_UTF8)
+                .accept(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(status().isOk())
+                .andDo(print())
+                .andExpect(jsonPath("$.condition").value("NEW"));
+    }
+
 
     /**
      * Tests the deletion of a single car by ID.
      * @throws Exception if the delete operation of a vehicle fails
      */
-    @Test
-    public void deleteCar() throws Exception {
-        /**
-         * TODO: Add a test to check whether a vehicle is appropriately deleted
-         *   when the `delete` method is called from the Car Controller. This
-         *   should utilize the car from `getCar()` below.
-         */
+    @Test()
+    public void test_5_deleteCar() throws Exception {
+
+        mvc.perform(delete(new URI("/cars/1"))
+                .accept(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(status().isNoContent());
     }
 
     /**
@@ -147,4 +175,28 @@ public class CarControllerTest {
         car.setCondition(Condition.USED);
         return car;
     }
+
+    /**
+     * for PUT REQUEST ==> changed FuelType to Petrol and condition to NEW
+     */
+    private Car getUpdatedCar() {
+        Car car = new Car();
+        car.setLocation(new Location(40.730610, -73.935242));
+        Details details = new Details();
+        Manufacturer manufacturer = new Manufacturer(101, "Chevrolet");
+        details.setManufacturer(manufacturer);
+        details.setModel("Impala");
+        details.setMileage(32280);
+        details.setExternalColor("white");
+        details.setBody("sedan");
+        details.setEngine("3.6L V6");
+        details.setFuelType("Petrol");
+        details.setModelYear(2018);
+        details.setProductionYear(2018);
+        details.setNumberOfDoors(4);
+        car.setDetails(details);
+        car.setCondition(Condition.NEW);
+        return car;
+    }
+
 }

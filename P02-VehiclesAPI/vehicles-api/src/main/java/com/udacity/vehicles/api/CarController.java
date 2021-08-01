@@ -63,11 +63,7 @@ class CarController {
      */
     @GetMapping("/{id}")
     Resource<Car> get(@PathVariable Long id) {
-        /**
-         * TODO: Use the `findById` method from the Car Service to get car information.
-         * TODO: Use the `assembler` on that car and return the resulting output.
-         *   Update the first line as part of the above implementing.
-         */
+
         return assembler.toResource(carService.findById(id));
     }
 
@@ -79,12 +75,11 @@ class CarController {
      */
     @PostMapping
     ResponseEntity<?> post(@Valid @RequestBody Car car) throws URISyntaxException {
-        /**
-         * TODO: Use the `save` method from the Car Service to save the input car.
-         * TODO: Use the `assembler` on that saved car and return as part of the response.
-         *   Update the first line as part of the above implementing.
-         */
+
         Resource<Car> resource = assembler.toResource(carService.save(car));
+        Long id=resource.getContent().getId();
+        Car findCar = carService.findById(id); //to get location from vehicle id generated after post request and update it
+        resource = assembler.toResource(carService.save(findCar));
         return ResponseEntity.created(new URI(resource.getId().expand().getHref())).body(resource);
     }
 
@@ -96,16 +91,13 @@ class CarController {
      */
     @PutMapping("/{id}")
     ResponseEntity<?> put(@PathVariable Long id, @Valid @RequestBody Car car) {
-        /**
-         * TODO: Set the id of the input car object to the `id` input.
-         * TODO: Save the car using the `save` method from the Car service
-         * TODO: Use the `assembler` on that updated car and return as part of the response.
-         *   Update the first line as part of the above implementing.
-         */
+
         Car findCar = carService.findById(id);
         if (findCar != null) {
             car.setId(id);
-            Resource<Car> resource = assembler.toResource(carService.save(findCar));
+            Car carFinal=carService.save(car);
+            Resource<Car> resource = assembler.toResource(car);
+            findCar=carService.findById(id); //setting location in response
             return ResponseEntity.ok(resource);
         }else{
             return new ResponseEntity<>(id, HttpStatus.NOT_FOUND);
@@ -120,13 +112,11 @@ class CarController {
      */
     @DeleteMapping("/{id}")
     ResponseEntity<?> delete(@PathVariable Long id) {
-        /**
-         * TODO: Use the Car Service to delete the requested vehicle.
-         */
+
         Car car = carService.findById(id);
         if (car != null) {
             carService.delete(id);
-            return new ResponseEntity<>(id, HttpStatus.OK);
+            return new ResponseEntity<>("vehicle deleted", HttpStatus.NO_CONTENT);
         } else {
             return new ResponseEntity<>(id, HttpStatus.NOT_FOUND);
         }

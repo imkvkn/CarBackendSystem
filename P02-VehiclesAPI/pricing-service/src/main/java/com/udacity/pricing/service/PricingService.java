@@ -39,7 +39,7 @@ public class PricingService {
     public static Price getPrice(@RequestParam Long vehicleId) throws PriceException {
 
         if (!PRICES.containsKey(vehicleId)) {
-            throw new PriceException("Cannot find price for Vehicle " + vehicleId);
+            throw new PriceException("Cannot find price for Vehicle with id " + vehicleId);
         }
 
         return PRICES.get(vehicleId);
@@ -57,9 +57,8 @@ public class PricingService {
     public void deleteById(Long id) throws PriceException {
 
         if (!PRICES.containsKey(id)) {
-            throw new PriceException("Cannot find price for Vehicle " + id);
+            throw new PriceException("Cannot find price for Vehicle with id " + id);
         }
         repository.deleteById(id);
-
     }
 }

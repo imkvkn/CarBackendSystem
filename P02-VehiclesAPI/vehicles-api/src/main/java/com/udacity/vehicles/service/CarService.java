@@ -26,10 +26,7 @@ public class CarService {
 
 
     public CarService(CarRepository repository, WebClient maps, WebClient pricing, ModelMapper modelMapper) {
-        /**
-         * TODO: Add the Maps and Pricing Web Clients you create
-         *   in `VehiclesApiApplication` as arguments and set them here.
-         */
+
         this.mapsClient = new MapsClient(maps, modelMapper);
         this.priceClient = new PriceClient(pricing);
         this.repository = repository;
@@ -49,53 +46,14 @@ public class CarService {
      * @return the requested car's information, including location and price
      */
     public Car findById(Long id) {
-            /**
-             * TODO: Find the car by ID from the `repository` if it exists.
-             *   If it does not exist, throw a CarNotFoundException
-             *   Remove the below code as part of your implementation.
-             */
+
             Car car = repository.findById(id).orElseThrow(CarNotFoundException::new);
-            /**
-             * TODO: Use the Pricing Web client you create in `VehiclesApiApplication`
-             *   to get the price based on the `id` input'
-             * TODO: Set the price of the car
-             * Note: The car class file uses @transient, meaning you will need to call
-             *   the pricing service each time to get the price.
-             */
-
             car.setPrice(priceClient.getPrice(id));
-            System.out.println(priceClient.getPrice(id));
-            /**
-             * TODO: Use the Maps Web client you create in `VehiclesApiApplication`
-             *   to get the address for the vehicle. You should access the location
-             *   from the car object and feed it to the Maps service.
-             * TODO: Set the location of the vehicle, including the address information
-             * Note: The Location class file also uses @transient for the address,
-             * meaning the Maps service needs to be called each time for the address.
-             */
-
             Location location = mapsClient.getAddress(car.getLocation());
             car.setLocation(location);
 
             return car;
         }
-
-
-
-
-
-        /**
-         * TODO: Use the Maps Web client you create in `VehiclesApiApplication`
-         *   to get the address for the vehicle. You should access the location
-         *   from the car object and feed it to the Maps service.
-         * TODO: Set the location of the vehicle, including the address information
-         * Note: The Location class file also uses @transient for the address,
-         * meaning the Maps service needs to be called each time for the address.
-         */
-
-
-
-
 
 
     /**
@@ -109,9 +67,14 @@ public class CarService {
                     .map(carToBeUpdated -> {
                         carToBeUpdated.setDetails(car.getDetails());
                         carToBeUpdated.setLocation(car.getLocation());
+                        carToBeUpdated.setCondition(car.getCondition());
                         return repository.save(carToBeUpdated);
                     }).orElseThrow(CarNotFoundException::new);
         }
+       /* Long vehicleId=car.getId();
+        car.setPrice(priceClient.getPrice(vehicleId));
+        Location location = mapsClient.getAddress(car.getLocation());
+        car.setLocation(location);*/
 
         return repository.save(car);
     }
@@ -121,10 +84,7 @@ public class CarService {
      * @param id the ID number of the car to delete
      */
     public void delete(Long id) {
-        /**
-         * TODO: Find the car by ID from the `repository` if it exists.
-         *   If it does not exist, throw a CarNotFoundException
-         */
+
         Optional<Car> optionalCar;
         if (repository.findById(id).isPresent()){
             optionalCar = repository.findById(id);
@@ -133,10 +93,6 @@ public class CarService {
         }
 
 
-
-        /**
-         * TODO: Delete the car from the repository.
-         */
         optionalCar.ifPresent(repository::delete);
         priceClient.deletePrice(id);
 
